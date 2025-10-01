@@ -124,7 +124,7 @@ let existsi t ~f =
   [@nontail]
 ;;
 
-let insertion_ordered_iter t ~f =
+let insertion_ordered_iter t ~(local_ f) =
   Map.iter t.insertion_ordered_map ~f:(fun (key, data) -> f key data) [@nontail]
 ;;
 
@@ -146,7 +146,7 @@ let map ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~(local_ f) =
   let insertion_ordered_map =
     Map.filter insertion_ordered_map ~f:(fun ((_ : 'key), data) -> f data)
   in
@@ -154,7 +154,7 @@ let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f 
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~(local_ f) =
   let insertion_ordered_map =
     Map.filteri insertion_ordered_map ~f:(fun ~key:(_ : int) ~data:(key, data) ->
       f ~key ~data)
@@ -165,7 +165,10 @@ let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filter_map ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filter_map
+  ({ insertion_ordered_map; canonical_map; latest_index = _ } as t)
+  ~(local_ f)
+  =
   let insertion_ordered_map =
     Map.filter_map insertion_ordered_map ~f:(fun (key, data) ->
       f data >>| Tuple2.create key)

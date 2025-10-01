@@ -106,57 +106,69 @@ module type Insertion_ordered_map = sig
   val set : ('key, 'a, 'cmp) t -> key:'key -> data:'a -> ('key, 'a, 'cmp) t
 
   (** [update] applied to an existing [key] does not change its insertion order. *)
-  val update : ('key, 'a, 'cmp) t -> 'key -> f:('a option -> 'a) -> ('key, 'a, 'cmp) t
+  val update
+    :  ('key, 'a, 'cmp) t
+    -> 'key
+    -> f:local_ ('a option -> 'a)
+    -> ('key, 'a, 'cmp) t
 
   (** [change] applied to an existing [key] does not change its insertion order. *)
   val change
     :  ('key, 'a, 'cmp) t
     -> 'key
-    -> f:('a option -> 'a option)
+    -> f:local_ ('a option -> 'a option)
     -> ('key, 'a, 'cmp) t
 
   val find : ('key, 'a, _) t -> 'key -> 'a option
   val find_exn : ('key, 'a, _) t -> 'key -> 'a
   val remove : ('key, 'a, 'cmp) t -> 'key -> ('key, 'a, 'cmp) t
   val mem : ('key, _, _) t -> 'key -> bool
-  val exists : (_, 'a, _) t -> f:('a -> bool) -> bool
-  val existsi : ('key, 'a, _) t -> f:(key:'key -> data:'a -> bool) -> bool
+  val exists : (_, 'a, _) t -> f:local_ ('a -> bool) -> bool
+  val existsi : ('key, 'a, _) t -> f:local_ (key:'key -> data:'a -> bool) -> bool
 
   (** Similar to [set] and [update], {!val:map}, {!val:filter} and {!val:filter_map} do
       not change keys' insertion order. *)
 
-  val map : ('key, 'a, 'cmp) t -> f:('a -> 'b) -> ('key, 'b, 'cmp) t
-  val filter : ('key, 'a, 'cmp) t -> f:('a -> bool) -> ('key, 'a, 'cmp) t
+  val map : ('key, 'a, 'cmp) t -> f:local_ ('a -> 'b) -> ('key, 'b, 'cmp) t
+  val filter : ('key, 'a, 'cmp) t -> f:local_ ('a -> bool) -> ('key, 'a, 'cmp) t
 
   val filteri
     :  ('key, 'a, 'cmp) t
-    -> f:(key:'key -> data:'a -> bool)
+    -> f:local_ (key:'key -> data:'a -> bool)
     -> ('key, 'a, 'cmp) t
 
-  val filter_map : ('key, 'a, 'cmp) t -> f:('a -> 'b option) -> ('key, 'b, 'cmp) t
+  val filter_map : ('key, 'a, 'cmp) t -> f:local_ ('a -> 'b option) -> ('key, 'b, 'cmp) t
 
   (** {1 Insertion-ordered accessors} *)
 
-  val iter_keys : ('key, _, _) t -> f:('key -> unit) -> unit
-  val iter : (_, 'a, _) t -> f:('a -> unit) -> unit
-  val iteri : ('key, 'a, _) t -> f:(key:'key -> data:'a -> unit) -> unit
+  val iter_keys : ('key, _, _) t -> f:local_ ('key -> unit) -> unit
+  val iter : (_, 'a, _) t -> f:local_ ('a -> unit) -> unit
+  val iteri : ('key, 'a, _) t -> f:local_ (key:'key -> data:'a -> unit) -> unit
 
   val iteri_until
     :  ('key, 'a, _) t
-    -> f:(key:'key -> data:'a -> Map.Continue_or_stop.t)
+    -> f:local_ (key:'key -> data:'a -> Map.Continue_or_stop.t)
     -> Map.Finished_or_unfinished.t
 
-  val fold : ('key, 'a, _) t -> init:'b -> f:(key:'key -> data:'a -> 'b -> 'b) -> 'b
+  val fold
+    :  ('key, 'a, _) t
+    -> init:'b
+    -> f:local_ (key:'key -> data:'a -> 'b -> 'b)
+    -> 'b
 
   val fold_until
     :  ('key, 'a, _) t
     -> init:'b
-    -> f:(key:'key -> data:'a -> 'b -> ('b, 'final) Container.Continue_or_stop.t)
-    -> finish:('b -> 'final)
+    -> f:local_ (key:'key -> data:'a -> 'b -> ('b, 'final) Container.Continue_or_stop.t)
+    -> finish:local_ ('b -> 'final)
     -> 'final
 
   (** [fold_right] folds over keys and data in the map in reverse insertion order. *)
-  val fold_right : ('key, 'a, _) t -> init:'b -> f:(key:'key -> data:'a -> 'b -> 'b) -> 'b
+  val fold_right
+    :  ('key, 'a, _) t
+    -> init:'b
+    -> f:local_ (key:'key -> data:'a -> 'b -> 'b)
+    -> 'b
 
   val keys : ('key, _, _) t -> 'key list
   val data : (_, 'a, _) t -> 'a list
