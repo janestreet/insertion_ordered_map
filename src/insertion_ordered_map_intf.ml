@@ -79,6 +79,16 @@ module type Insertion_ordered_map = sig
 
   type ('key, 'a, 'cmp) t
 
+  (** {1 Creators} *)
+
+  val empty : ('key, 'cmp) Comparator.Module.t -> ('key, 'a, 'cmp) t
+  val singleton : ('key, 'cmp) Comparator.Module.t -> 'key -> 'a -> ('key, 'a, 'cmp) t
+
+  val of_alist_exn
+    :  ('key, 'cmp) Comparator.Module.t
+    -> ('key * 'a) list
+    -> ('key, 'a, 'cmp) t
+
   (** {1 Order-invariant accessors} *)
 
   val is_empty : _ t -> bool
