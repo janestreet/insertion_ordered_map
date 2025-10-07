@@ -32,6 +32,20 @@ module type S = S with type ('key, 'a, 'cmp) insertion_ordered_map := ('key, 'a,
 module type S_binable =
   S_binable with type ('key, 'a, 'cmp) insertion_ordered_map := ('key, 'a, 'cmp) t
 
+let empty comparator_module =
+  { insertion_ordered_map = Map.empty (module Int)
+  ; canonical_map = Map.empty comparator_module
+  ; latest_index = 0 (* Read note in [of_alist_exn]. *)
+  }
+;;
+
+let singleton comparator_module key data =
+  { insertion_ordered_map = Int.Map.singleton 1 (key, data)
+  ; canonical_map = Map.singleton comparator_module key (1, data)
+  ; latest_index = 1 (* Read note in [of_alist_exn]. *)
+  }
+;;
+
 let is_empty t = Map.is_empty t.insertion_ordered_map
 let length t = Map.length t.insertion_ordered_map
 
@@ -110,7 +124,7 @@ let existsi t ~f =
   [@nontail]
 ;;
 
-let insertion_ordered_iter t ~f =
+let insertion_ordered_iter t ~(local_ f) =
   Map.iter t.insertion_ordered_map ~f:(fun (key, data) -> f key data) [@nontail]
 ;;
 
@@ -132,7 +146,7 @@ let map ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~(local_ f) =
   let insertion_ordered_map =
     Map.filter insertion_ordered_map ~f:(fun ((_ : 'key), data) -> f data)
   in
@@ -140,7 +154,7 @@ let filter ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f 
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~(local_ f) =
   let insertion_ordered_map =
     Map.filteri insertion_ordered_map ~f:(fun ~key:(_ : int) ~data:(key, data) ->
       f ~key ~data)
@@ -151,7 +165,10 @@ let filteri ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f
   { t with insertion_ordered_map; canonical_map }
 ;;
 
-let filter_map ({ insertion_ordered_map; canonical_map; latest_index = _ } as t) ~f =
+let filter_map
+  ({ insertion_ordered_map; canonical_map; latest_index = _ } as t)
+  ~(local_ f)
+  =
   let insertion_ordered_map =
     Map.filter_map insertion_ordered_map ~f:(fun (key, data) ->
       f data >>| Tuple2.create key)
@@ -288,6 +305,8 @@ struct
     ;;
   end
 
+  let empty = empty (module Key)
+  let singleton key data = singleton (module Key) key data
   let of_alist_exn alist = of_alist_exn (module Key) alist
 
   module Provide_of_sexp
@@ -330,20 +349,6 @@ struct
       Sexplib.Sexp_grammar.coerce (List.Assoc.t_sexp_grammar Key.t_sexp_grammar v_grammar)
     ;;
   end
-
-  let empty =
-    { insertion_ordered_map = Map.empty (module Int)
-    ; canonical_map = Map.empty (module Key)
-    ; latest_index = 0 (* Read note in [of_alist_exn]. *)
-    }
-  ;;
-
-  let singleton key data =
-    { insertion_ordered_map = Int.Map.singleton 1 (key, data)
-    ; canonical_map = Key.Map.singleton key (1, data)
-    ; latest_index = 1 (* Read note in [of_alist_exn]. *)
-    }
-  ;;
 end
 
 module Make_plain (Key : sig
