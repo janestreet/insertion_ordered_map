@@ -32,30 +32,6 @@ module type S_plain = sig
   val empty : _ t
   val singleton : Key.t -> 'a -> 'a t
   val of_alist_exn : (Key.t * 'a) list -> 'a t
-
-  module Provide_of_sexp
-      (Key : sig
-               type t [@@deriving of_sexp]
-             end
-             with type t = Key.t) : sig
-      type _ t [@@deriving of_sexp]
-    end
-    with type 'a t := 'a t
-
-  module Provide_bin_io
-      (Key : Stable with type t = Key.t) : sig
-      type _ t [@@deriving bin_io]
-    end
-    with type 'a t := 'a t
-
-  module Provide_sexp_grammar
-      (Key : sig
-               type t [@@deriving sexp_grammar]
-             end
-             with type t = Key.t) : sig
-      type _ t [@@deriving sexp_grammar]
-    end
-    with type 'a t := 'a t
 end
 
 module type S = sig
@@ -199,21 +175,50 @@ module type Insertion_ordered_map = sig
   module type S_binable =
     S_binable with type ('key, 'a, 'cmp) insertion_ordered_map := ('key, 'a, 'cmp) t
 
-  module Make_plain (Key : sig
+  module%template.portable
+    [@modality p] Make_plain (Key : sig
       type t [@@deriving compare, sexp_of]
 
-      include Comparator.S with type t := t
+      include Comparator.S [@modality p] with type t := t
     end) : S_plain with module Key := Key
 
-  module Make (Key : sig
+  module%template.portable
+    [@modality p] Provide_of_sexp (Key : sig
+      type t [@@deriving of_sexp]
+
+      include Comparator.S [@modality p] with type t := t
+    end) : sig
+      type _ t [@@deriving of_sexp]
+    end
+    with type 'a t := (Key.t, 'a, Key.comparator_witness) t
+
+  module%template.portable
+    [@modality p] Make (Key : sig
       type t [@@deriving compare, sexp]
 
-      include Comparator.S with type t := t
+      include Comparator.S [@modality p] with type t := t
     end) : S with module Key := Key
 
-  module Make_binable (Key : sig
+  module%template.portable
+    [@modality p] Provide_bin_io
+      (Key : Stable
+    [@modality p]) : sig
+      type _ t [@@deriving bin_io]
+    end
+    with type 'a t := (Key.t, 'a, Key.comparator_witness) t
+
+  module%template.portable
+    [@modality p] Make_binable (Key : sig
       type t [@@deriving bin_io, compare, sexp]
 
-      include Comparator.S with type t := t
+      include Comparator.S [@modality p] with type t := t
     end) : S_binable with module Key := Key
+
+  module Provide_sexp_grammar (Key : sig
+      type t [@@deriving sexp_grammar]
+      type comparator_witness
+    end) : sig
+      type _ t [@@deriving sexp_grammar]
+    end
+    with type 'a t := (Key.t, 'a, Key.comparator_witness) t
 end
