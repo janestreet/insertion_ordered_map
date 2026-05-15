@@ -17,7 +17,7 @@ depends: [
   "sexplib"
   "dune"     {>= "3.17.0"}
 ]
-available: arch != "arm32" & arch != "x86_32"
+available: arch != "x86_32"
 synopsis: "A Core.Map with a notion of insertion order."
 description: "
 A Core.Map where any operation that iterates through keys (e.g. fold, iter_keys) will iterate in insertion order with O(N) complexity.
