@@ -2,9 +2,9 @@ open! Core
 
 (** See {!Insertion_ordered_map} below. *)
 
-module type S_plain = sig
+module type%template [@mode m = (local, global)] S_plain = sig
   module Key : sig
-    type t [@@deriving compare, sexp_of]
+    type t [@@deriving (compare [@mode.explicit m]), sexp_of]
 
     include Comparator.S with type t := t
   end
@@ -26,7 +26,7 @@ module type S_plain = sig
   (** [Semantic_compare] provides a compare function with the same semantics as in
       [Semantic_equal]. *)
   module Semantic_compare : sig
-    type nonrec 'a t = 'a t [@@deriving compare]
+    type nonrec 'a t = 'a t [@@deriving compare [@mode.explicit m]]
   end
 
   val empty : _ t
@@ -176,8 +176,8 @@ module type Insertion_ordered_map = sig
     S_binable with type ('key, 'a, 'cmp) insertion_ordered_map := ('key, 'a, 'cmp) t
 
   module%template.portable
-    [@modality p] Make_plain (Key : sig
-      type t [@@deriving compare, sexp_of]
+    [@modality p] [@mode m = (local, global)] Make_plain (Key : sig
+      type t [@@deriving (compare [@mode.explicit m]), sexp_of]
 
       include Comparator.S [@modality p] with type t := t
     end) : S_plain with module Key := Key
@@ -193,8 +193,8 @@ module type Insertion_ordered_map = sig
     with type 'a t := (Key.t, 'a, Key.comparator_witness) t
 
   module%template.portable
-    [@modality p] Make (Key : sig
-      type t [@@deriving compare, sexp]
+    [@modality p] [@mode m = (local, global)] Make (Key : sig
+      type t [@@deriving (compare [@mode.explicit m]), sexp]
 
       include Comparator.S [@modality p] with type t := t
     end) : S with module Key := Key
@@ -208,8 +208,8 @@ module type Insertion_ordered_map = sig
     with type 'a t := (Key.t, 'a, Key.comparator_witness) t
 
   module%template.portable
-    [@modality p] Make_binable (Key : sig
-      type t [@@deriving bin_io, compare, sexp]
+    [@modality p] [@mode m = (local, global)] Make_binable (Key : sig
+      type t [@@deriving bin_io, (compare [@mode.explicit m]), sexp]
 
       include Comparator.S [@modality p] with type t := t
     end) : S_binable with module Key := Key
