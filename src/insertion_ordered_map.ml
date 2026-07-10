@@ -262,8 +262,8 @@ let of_alist_exn comparator_s alist =
 let of_map map = of_alist_exn (Map.comparator_s map) (Map.to_alist map)
 
 module%template.portable
-  [@modality p] Make_common (Key : sig
-    type t [@@deriving compare, sexp_of]
+  [@modality p] [@mode m = (local, global)] Make_common (Key : sig
+    type t [@@deriving (compare [@mode.explicit m]), sexp_of]
 
     include Comparable.S_plain [@modality p] with type t := t
   end) =
@@ -290,7 +290,7 @@ struct
        of [latest_index]) is not considered in semantic equivalence. *)
     let equal equal_v t t' =
       List.equal
-        (Tuple2.equal ~eq1:[%compare.equal: Key.t] ~eq2:equal_v)
+        (Tuple2.equal ~eq1:([%compare.equal: Key.t] [@mode.explicit m]) ~eq2:equal_v)
         (Map.data t.insertion_ordered_map)
         (Map.data t'.insertion_ordered_map)
     ;;
@@ -301,7 +301,7 @@ struct
 
     let compare compare_v t t' =
       List.compare
-        (Tuple2.compare ~cmp1:[%compare: Key.t] ~cmp2:compare_v)
+        (Tuple2.compare ~cmp1:([%compare: Key.t] [@mode.explicit m]) ~cmp2:compare_v)
         (Map.data t.insertion_ordered_map)
         (Map.data t'.insertion_ordered_map)
     ;;
@@ -364,43 +364,43 @@ struct
 end
 
 module%template.portable
-  [@modality p] Make_plain (Key : sig
-    type t [@@deriving compare, sexp_of]
+  [@modality p] [@mode m = (local, global)] Make_plain (Key : sig
+    type t [@@deriving (compare [@mode.explicit m]), sexp_of]
 
     include Comparator.S [@modality p] with type t := t
   end) =
 struct
-  include Make_common [@modality p] (struct
+  include Make_common [@modality p] [@mode m] (struct
       include Key
-      include Comparable.Make_plain_using_comparator [@modality p] (Key)
+      include Comparable.Make_plain_using_comparator [@mode m] [@modality p] (Key)
     end)
 end
 
 module%template.portable
-  [@modality p] Make (Key : sig
-    type t [@@deriving compare, sexp]
+  [@modality p] [@mode m = (local, global)] Make (Key : sig
+    type t [@@deriving (compare [@mode.explicit m]), sexp]
 
     include Comparator.S [@modality p] with type t := t
   end) =
 struct
-  include Make_common [@modality p] (struct
+  include Make_common [@modality p] [@mode m] (struct
       include Key
-      include Comparable.Make_plain_using_comparator [@modality p] (Key)
+      include Comparable.Make_plain_using_comparator [@mode m] [@modality p] (Key)
     end)
 
   include Provide_of_sexp [@modality p] (Key)
 end
 
 module%template.portable
-  [@modality p] Make_binable (Key : sig
-    type t [@@deriving bin_io, compare, sexp]
+  [@modality p] [@mode m = (local, global)] Make_binable (Key : sig
+    type t [@@deriving bin_io, (compare [@mode.explicit m]), sexp]
 
     include Comparator.S [@modality p] with type t := t
   end) =
 struct
-  include Make_common [@modality p] (struct
+  include Make_common [@modality p] [@mode m] (struct
       include Key
-      include Comparable.Make_plain_using_comparator [@modality p] (Key)
+      include Comparable.Make_plain_using_comparator [@mode m] [@modality p] (Key)
     end)
 
   include Provide_of_sexp [@modality p] (Key)
